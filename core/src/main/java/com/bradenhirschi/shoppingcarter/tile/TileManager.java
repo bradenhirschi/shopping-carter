@@ -37,6 +37,10 @@ public class TileManager {
         tiles[2] = new Tile();
         tiles[2].image = new Texture("tiles/shelf.png");
         tiles[2].collision = true;
+
+        tiles[3] = new Tile();
+        tiles[3].image = new Texture("tiles/register.png");
+        tiles[3].collision = true;
     }
 
     public void loadMap(String filePath) {
@@ -45,8 +49,8 @@ public class TileManager {
             InputStream inputStream = getClass().getResourceAsStream(filePath);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             int col = 0;
-            int row = 0;
-            while (col < gameScreen.maxWorldCol && row < gameScreen.maxWorldRow) {
+            int row = gameScreen.maxWorldRow - 1;
+            while (col < gameScreen.maxWorldCol && row >= 0) {
                 String line = bufferedReader.readLine();
 
                 while (col < gameScreen.maxWorldCol) {
@@ -61,7 +65,7 @@ public class TileManager {
 
                 if (col == gameScreen.maxWorldCol) {
                     col = 0;
-                    row++;
+                    row--;
                 }
             }
         } catch (Exception e) {

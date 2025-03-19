@@ -25,6 +25,7 @@ public class GameScreen implements Screen {
     private final Camera camera;
     public CollisionChecker collisionChecker = new CollisionChecker(this);
     public KeyHandler keyHandler = new KeyHandler();
+    public MusicManager musicManager = new MusicManager();
     public SoundManager soundManager = new SoundManager();
     private final SpriteBatch spriteBatch = new SpriteBatch();
     public TileManager tileManager = new TileManager(this);
@@ -32,7 +33,6 @@ public class GameScreen implements Screen {
 
     // ENTITY
     public Player player = new Player(this, this.keyHandler);
-
 
     public GameScreen(Camera camera, Viewport viewport) {
         this.camera = camera;
@@ -42,14 +42,13 @@ public class GameScreen implements Screen {
     @Override
     public void show() {
         Gdx.input.setInputProcessor(keyHandler);
-        soundManager.setFile(0);
-        soundManager.play();
+        musicManager.play();
     }
 
     @Override
     public void render(float delta) {
         // Update the player and camera
-        player.update();
+        player.update(delta);
         camera.position.set(player.x, player.y, 0);  // Camera follows the player
         camera.update();
 

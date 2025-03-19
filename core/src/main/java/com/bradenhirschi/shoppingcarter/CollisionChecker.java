@@ -12,53 +12,41 @@ public class CollisionChecker {
     }
 
     public void checkTile(Entity entity) {
+        // Calculate future position based on rotation
+        float radians = (float) Math.toRadians(entity.rotation);
+        int futureX = entity.x;
+        int futureY = entity.y;
 
-        int entityLeftX = entity.x + entity.hitbox.x;
-        int entityRightX = entity.x + entity.hitbox.x + entity.hitbox.width;
-        int entityTopY = entity.y + entity.hitbox.y + entity.hitbox.height;
-        int entityBottomY = entity.y + entity.hitbox.y;
+        if (gameScreen.keyHandler.upPressed) {
+            futureX += Math.cos(radians) * entity.speed;
+            futureY -= Math.sin(radians) * entity.speed;
+        }
+        if (gameScreen.keyHandler.downPressed) {
+            futureX -= Math.cos(radians) * entity.speed;
+            futureY += Math.sin(radians) * entity.speed;
+        }
 
-        int entityLeftCol = entityLeftX / gameScreen.tileSize;
-        int entityRightCol = entityRightX / gameScreen.tileSize;
-        int entityTopRow = entityTopY / gameScreen.tileSize;
-        int entityBottomRow = entityBottomY / gameScreen.tileSize;
+        // Check collision only at the forward position
+        int entityLeftX = futureX + entity.hitbox.x;
+        int entityRightX = futureX + entity.hitbox.x + entity.hitbox.width;
+        int entityTopY = futureY + entity.hitbox.y + entity.hitbox.height;
+        int entityBottomY = futureY + entity.hitbox.y;
 
-        int tile1Num;
-        int tile2Num;
+        int leftCol = entityLeftX / gameScreen.tileSize;
+        int rightCol = entityRightX / gameScreen.tileSize;
+        int topRow = entityTopY / gameScreen.tileSize;
+        int bottomRow = entityBottomY / gameScreen.tileSize;
 
-        switch (entity.direction) {
-            case "up":
-                entityTopRow = (entityTopY + entity.speed) / gameScreen.tileSize;
-                tile1Num = gameScreen.tileManager.mapTileNumbers[entityLeftCol][entityTopRow];
-                tile2Num = gameScreen.tileManager.mapTileNumbers[entityRightCol][entityTopRow];
-                if (gameScreen.tileManager.tiles[tile1Num].collision || gameScreen.tileManager.tiles[tile2Num].collision) {
-                    entity.collision = true;
-                }
-                break;
-            case "down":
-                entityBottomRow = (entityBottomY - entity.speed) / gameScreen.tileSize;
-                tile1Num = gameScreen.tileManager.mapTileNumbers[entityLeftCol][entityBottomRow];
-                tile2Num = gameScreen.tileManager.mapTileNumbers[entityRightCol][entityBottomRow];
-                if (gameScreen.tileManager.tiles[tile1Num].collision || gameScreen.tileManager.tiles[tile2Num].collision) {
-                    entity.collision = true;
-                }
-                break;
-            case "left":
-                entityLeftCol = (entityLeftX - entity.speed) / gameScreen.tileSize;
-                tile1Num = gameScreen.tileManager.mapTileNumbers[entityLeftCol][entityTopRow];
-                tile2Num = gameScreen.tileManager.mapTileNumbers[entityLeftCol][entityBottomRow];
-                if (gameScreen.tileManager.tiles[tile1Num].collision || gameScreen.tileManager.tiles[tile2Num].collision) {
-                    entity.collision = true;
-                }
-                break;
-            case "right":
-                entityRightCol = (entityRightX + entity.speed) / gameScreen.tileSize;
-                tile1Num = gameScreen.tileManager.mapTileNumbers[entityRightCol][entityTopRow];
-                tile2Num = gameScreen.tileManager.mapTileNumbers[entityRightCol][entityBottomRow];
-                if (gameScreen.tileManager.tiles[tile1Num].collision || gameScreen.tileManager.tiles[tile2Num].collision) {
-                    entity.collision = true;
-                }
-                break;
+        // Get the tile numbers at the future movement location
+        int tile1Num = gameScreen.tileManager.mapTileNumbers[leftCol][topRow];
+        int tile2Num = gameScreen.tileManager.mapTileNumbers[rightCol][bottomRow];
+
+        // Check if the future position is colliding
+        if (gameScreen.tileManager.tiles[tile1Num].collision || gameScreen.tileManager.tiles[tile2Num].collision) {
+            entity.collision = true;
+        } else {
+            entity.collision = false;
         }
     }
+
 }
