@@ -1,13 +1,7 @@
 package com.bradenhirschi.shoppingcarter;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import java.net.URL;
 
 import static com.badlogic.gdx.math.MathUtils.random;
 
