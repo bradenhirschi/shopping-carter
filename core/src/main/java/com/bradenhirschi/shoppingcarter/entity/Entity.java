@@ -9,6 +9,7 @@ public class Entity {
     public int x, y;
     public int speed;
 
+    public Texture sprite;
     public Texture right1, right2, right3;
     public Texture frontRight1, frontRight2, frontRight3;
     public Texture front1, front2, front3;

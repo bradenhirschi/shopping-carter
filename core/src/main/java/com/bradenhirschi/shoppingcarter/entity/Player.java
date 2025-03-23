@@ -3,6 +3,7 @@ package com.bradenhirschi.shoppingcarter.entity;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.bradenhirschi.shoppingcarter.GameScreen;
 import com.bradenhirschi.shoppingcarter.KeyHandler;
 
@@ -36,6 +37,7 @@ public class Player extends Entity {
     }
 
     public void getPlayerImage() {
+        sprite = new Texture("entities/player/topDown.png");
 
         front1 = new Texture("entities/player/front1.png");
         front2 = new Texture("entities/player/front2.png");
@@ -166,7 +168,12 @@ public class Player extends Entity {
                 break;
         }
 
-        batch.draw(sprite, x, y, gameScreen.tileSize, gameScreen.tileSize);
+        sprite = this.sprite;
+
+        Texture texture = new Texture("entities/player/topDown.png");
+        TextureRegion region = new TextureRegion(texture, 0, 0, texture.getWidth(), texture.getHeight());
+
+        batch.draw(region, (float) x,  (float) y, gameScreen.tileSize / 2, gameScreen.tileSize / 2,  (float) gameScreen.tileSize * 2,  (float) gameScreen.tileSize, 1f, 1f, rotation * -1);
     }
 
     // Helper method to select the correct walking sprite
