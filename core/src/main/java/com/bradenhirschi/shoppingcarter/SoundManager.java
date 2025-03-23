@@ -24,7 +24,7 @@ public class SoundManager {
         }
 
         long soundId = sound.play(1.0f);
-        sound.setPitch(soundId, 2.8f);
+        sound.setPitch(soundId, 2.2f);
 //        sound.dispose();
     }
 }

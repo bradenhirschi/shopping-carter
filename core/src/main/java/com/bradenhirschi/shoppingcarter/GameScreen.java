@@ -18,8 +18,8 @@ public class GameScreen implements Screen {
     public final int tileSize = originalTileSize * scale;
 
     // WORLD
-    public final int maxWorldCol = 16;
-    public final int maxWorldRow = 24;
+    public final int maxWorldCol = 20;
+    public final int maxWorldRow = 40;
 
     // SYSTEM
     private final Camera camera;
@@ -56,7 +56,7 @@ public class GameScreen implements Screen {
         spriteBatch.setProjectionMatrix(camera.combined);  // This applies the camera settings to the sprite batch
 
         // Clear the screen
-        ScreenUtils.clear(Color.BLACK);
+        ScreenUtils.clear(Color.valueOf("#3B3B50"));
 
         // Start drawing
         spriteBatch.begin();

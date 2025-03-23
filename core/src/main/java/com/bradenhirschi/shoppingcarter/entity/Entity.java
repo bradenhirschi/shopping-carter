@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import java.awt.*;
 
 public class Entity {
-    public int x, y;
+    public float x, y;
     public int speed;
 
     public Texture right1, right2, right3;
@@ -20,8 +20,6 @@ public class Entity {
 
     public Rectangle hitbox;
     public String direction;
-    public float rotation = 0; // Angle in degrees
-    public float rotationSpeed = 3f; // Speed of turning
 
     public Boolean collision = false;
 }

@@ -18,7 +18,7 @@ public class TileManager {
     public TileManager(GameScreen gameScreen) {
         this.gameScreen = gameScreen;
 
-        tiles = new Tile[10];
+        tiles = new Tile[11];
         mapTileNumbers = new int[gameScreen.maxWorldCol][gameScreen.maxWorldRow];
 
         getTileImages();
@@ -41,6 +41,32 @@ public class TileManager {
         tiles[3] = new Tile();
         tiles[3].image = new Texture("tiles/register.png");
         tiles[3].collision = true;
+
+        tiles[4] = new Tile();
+        tiles[4].image = new Texture("tiles/spill.png");
+
+        tiles[5] = new Tile();
+        tiles[5].image = new Texture("tiles/register.png");
+        tiles[5].collision = true;
+
+        tiles[6] = new Tile();
+        tiles[6].image = new Texture("tiles/register.png");
+        tiles[6].collision = true;
+
+        tiles[7] = new Tile();
+        tiles[7].image = new Texture("tiles/register.png");
+        tiles[7].collision = true;
+
+        tiles[8] = new Tile();
+        tiles[8].image = new Texture("tiles/register.png");
+        tiles[8].collision = true;
+
+        tiles[9] = new Tile();
+        tiles[9].image = new Texture("tiles/register.png");
+        tiles[9].collision = true;
+
+        tiles[10] = new Tile();
+        tiles[10].image = new Texture("tiles/milk.png");
     }
 
     public void loadMap(String filePath) {

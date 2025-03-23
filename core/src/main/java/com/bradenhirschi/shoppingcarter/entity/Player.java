@@ -1,10 +1,10 @@
 package com.bradenhirschi.shoppingcarter.entity;
 
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.bradenhirschi.shoppingcarter.GameScreen;
 import com.bradenhirschi.shoppingcarter.KeyHandler;
+import com.bradenhirschi.shoppingcarter.Utils;
 
 import java.awt.*;
 
@@ -29,9 +29,9 @@ public class Player extends Entity {
     public void setDefaultValues() {
 
         x = 200; //gameScreen.tileSize * 2;
-        y = 150; //gameScreen.tileSize * 10;
+        y = 300; //gameScreen.tileSize * 10;
         speed = 5;
-        direction = "left";
+        direction = "right";
         hitbox = new Rectangle(8, 0, 32, 32);
     }
 
@@ -39,7 +39,7 @@ public class Player extends Entity {
 
         front1 = new Texture("entities/player/front1.png");
         front2 = new Texture("entities/player/front2.png");
-        front3 = new Texture("entities/player/front3.png");
+        front3 = new Texture("entities/player/front2.png");
 
         frontLeft1 = new Texture("entities/player/frontLeft1.png");
         frontLeft2 = new Texture("entities/player/frontLeft2.png");
@@ -72,7 +72,7 @@ public class Player extends Entity {
     }
 
     public void update(float delta) {
-
+        // If no movement keys are pressed, stop walking and return
         if (!keyHandler.upPressed && !keyHandler.downPressed && !keyHandler.leftPressed && !keyHandler.rightPressed) {
             isWalking = false;
             return;
@@ -80,44 +80,66 @@ public class Player extends Entity {
             isWalking = true;
         }
 
-        // Rotate left or right
-        if (keyHandler.leftPressed) {
-            rotation -= rotationSpeed; // Turn left
-        }
-        if (keyHandler.rightPressed) {
-            rotation += rotationSpeed; // Turn right
-        }
+        // Variables to store intended movement
+        float nextX = x;
+        float nextY = y;
 
-        // Wrap rotation within 0-360 degrees
-        if (rotation < 0) {
-            rotation += 360;
-        } else if (rotation >= 360) {
-            rotation -= 360;
-        }
-
-        // Check for collisions
-        collision = false;
-        gameScreen.collisionChecker.checkTile(this);
-
-        if (collision) {
-            gameScreen.soundManager.playCrash();
-            return;
-        }
-
-        // Convert rotation to radians for movement calculation
-        float radians = (float) Math.toRadians(rotation);
-
-        // Move forward or backward based on rotation
+        // Check movement without directly modifying x and y
         if (keyHandler.upPressed) {
-            x += Math.cos(radians) * speed;
-            y -= Math.sin(radians) * speed;
-        }
-        if (keyHandler.downPressed) {
-            x -= Math.cos(radians) * speed;
-            y += Math.sin(radians) * speed;
+            if (keyHandler.leftPressed) {
+                nextX -= speed * Utils.DIAGONAL_FACTOR;
+                nextY += speed * Utils.DIAGONAL_FACTOR;
+                direction = "northwest";
+            } else if (keyHandler.rightPressed) {
+                nextX += speed * Utils.DIAGONAL_FACTOR;
+                nextY += speed * Utils.DIAGONAL_FACTOR;
+                direction = "northeast";
+            } else {
+                nextY += speed;
+                direction = "north";
+            }
+        } else if (keyHandler.downPressed) {
+            if (keyHandler.leftPressed) {
+                nextX -= speed * Utils.DIAGONAL_FACTOR;
+                nextY -= speed * Utils.DIAGONAL_FACTOR;
+                direction = "southwest";
+            } else if (keyHandler.rightPressed) {
+                nextX += speed * Utils.DIAGONAL_FACTOR;
+                nextY -= speed * Utils.DIAGONAL_FACTOR;
+                direction = "southeast";
+            } else {
+                nextY -= speed;
+                direction = "south";
+            }
+        } else if (keyHandler.leftPressed) {
+            nextX -= speed;
+            direction = "west";
+        } else if (keyHandler.rightPressed) {
+            nextX += speed;
+            direction = "east";
         }
 
-        // Update walk timer for animation
+        // Separate collision checks for x and y to allow sliding along walls
+        boolean xCollision = gameScreen.collisionChecker.checkTile(nextX, y);
+        boolean yCollision = gameScreen.collisionChecker.checkTile(x, nextY);
+
+        // Apply movement only if no collision occurs in that direction
+        if (!xCollision) {
+            x = nextX;
+        }
+        if (!yCollision) {
+            y = nextY;
+        }
+
+        // Play crash sound only on a new collision event
+        if ((xCollision || yCollision) && !collision) {
+            gameScreen.soundManager.playCrash();
+        }
+
+        // Update collision flag
+        collision = xCollision || yCollision;
+
+        // Update walk animation
         if (isWalking) {
             walkTimer += delta;
             if (walkTimer >= WALK_SPEED) {
@@ -127,38 +149,33 @@ public class Player extends Entity {
         }
     }
 
-
     public void draw(SpriteBatch batch) {
 
         Texture sprite = null;
 
-        // Normalize rotation to the nearest 45 degrees
-        int normalizedRotation = Math.round(rotation / 45) * 45;
-
-        switch (normalizedRotation) {
-            case 0:
-            case 360:
+        switch (direction) {
+            case "east":
                 sprite = getWalkingSprite(right1, right2, right3);
                 break;
-            case 45:
+            case "southeast":
                 sprite = getWalkingSprite(frontRight1, frontRight2, frontRight3);
                 break;
-            case 90:
+            case "south":
                 sprite = getWalkingSprite(front1, front2, front3);
                 break;
-            case 135:
+            case "southwest":
                 sprite = getWalkingSprite(frontLeft1, frontLeft2, frontLeft3);
                 break;
-            case 180:
+            case "west":
                 sprite = getWalkingSprite(left1, left2, left3);
                 break;
-            case 225:
+            case "northwest":
                 sprite = getWalkingSprite(backLeft1, backLeft2, backLeft3);
                 break;
-            case 270:
+            case "north":
                 sprite = getWalkingSprite(back1, back2, back3);
                 break;
-            case 315:
+            case "northeast":
                 sprite = getWalkingSprite(backRight1, backRight2, backRight3);
                 break;
             default:

@@ -11,31 +11,11 @@ public class CollisionChecker {
         this.gameScreen = gameScreen;
     }
 
-    public void checkTile(Entity entity) {
-        // Calculate future position based on rotation
-        float radians = (float) Math.toRadians(entity.rotation);
-        int futureX = entity.x;
-        int futureY = entity.y;
-
-        if (gameScreen.keyHandler.upPressed) {
-            futureX += Math.cos(radians) * entity.speed;
-            futureY -= Math.sin(radians) * entity.speed;
-        }
-        if (gameScreen.keyHandler.downPressed) {
-            futureX -= Math.cos(radians) * entity.speed;
-            futureY += Math.sin(radians) * entity.speed;
-        }
-
-        // Check collision only at the forward position
-        int entityLeftX = futureX + entity.hitbox.x;
-        int entityRightX = futureX + entity.hitbox.x + entity.hitbox.width;
-        int entityTopY = futureY + entity.hitbox.y + entity.hitbox.height;
-        int entityBottomY = futureY + entity.hitbox.y;
-
-        int leftCol = entityLeftX / gameScreen.tileSize;
-        int rightCol = entityRightX / gameScreen.tileSize;
-        int topRow = entityTopY / gameScreen.tileSize;
-        int bottomRow = entityBottomY / gameScreen.tileSize;
+    public boolean checkTile(float x, float y) {
+        int leftCol = (int) Math.floor(x / gameScreen.tileSize);
+        int rightCol = (int) Math.floor(x / gameScreen.tileSize);
+        int topRow = (int) Math.floor(y / gameScreen.tileSize);
+        int bottomRow = (int) Math.floor(y / gameScreen.tileSize);
 
         // Get the tile numbers at the future movement location
         int tile1Num = gameScreen.tileManager.mapTileNumbers[leftCol][topRow];
@@ -43,9 +23,9 @@ public class CollisionChecker {
 
         // Check if the future position is colliding
         if (gameScreen.tileManager.tiles[tile1Num].collision || gameScreen.tileManager.tiles[tile2Num].collision) {
-            entity.collision = true;
+            return true;
         } else {
-            entity.collision = false;
+            return false;
         }
     }
 
