@@ -1,7 +1,7 @@
 package com.bradenhirschi.shoppingcarter.entity;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.math.Polygon;
 
 import java.awt.*;
 
@@ -19,7 +19,7 @@ public class Entity {
     public Texture back1, back2, back3;
     public Texture backRight1, backRight2, backRight3;
 
-    public Rectangle hitbox;
+    public Polygon hitbox;
     public String direction;
     public float rotation = 0; // Angle in degrees
     public float rotationSpeed = 3f; // Speed of turning

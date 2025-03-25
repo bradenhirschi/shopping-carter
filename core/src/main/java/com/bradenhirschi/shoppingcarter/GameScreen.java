@@ -5,6 +5,9 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.bradenhirschi.shoppingcarter.entity.Player;
@@ -26,10 +29,12 @@ public class GameScreen implements Screen {
     public CollisionChecker collisionChecker = new CollisionChecker(this);
     public KeyHandler keyHandler = new KeyHandler();
     public MusicManager musicManager = new MusicManager();
+    private final ShapeRenderer shapeRenderer = new ShapeRenderer();
     public SoundManager soundManager = new SoundManager();
     private final SpriteBatch spriteBatch = new SpriteBatch();
     public TileManager tileManager = new TileManager(this);
     private final Viewport viewport;
+    private final World world = new World(new Vector2(0, 0), true);
 
     // ENTITY
     public Player player = new Player(this, this.keyHandler);
@@ -54,6 +59,7 @@ public class GameScreen implements Screen {
 
         // Set the projection matrix before rendering
         spriteBatch.setProjectionMatrix(camera.combined);  // This applies the camera settings to the sprite batch
+        shapeRenderer.setProjectionMatrix(camera.combined);
 
         // Clear the screen
         ScreenUtils.clear(Color.BLACK);
@@ -63,6 +69,12 @@ public class GameScreen implements Screen {
         tileManager.draw(spriteBatch);
         player.draw(spriteBatch);
         spriteBatch.end();
+
+        // Draw player hitbox for debugging
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.polygon(player.hitbox.getTransformedVertices()); // Draw hitbox
+        shapeRenderer.end();
     }
 
     @Override

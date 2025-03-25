@@ -1,13 +1,12 @@
 package com.bradenhirschi.shoppingcarter.entity;
 
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.VertexArray;
+import com.badlogic.gdx.math.Vector2;
 import com.bradenhirschi.shoppingcarter.GameScreen;
 import com.bradenhirschi.shoppingcarter.KeyHandler;
-
-import java.awt.*;
 
 public class Player extends Entity {
 
@@ -31,9 +30,19 @@ public class Player extends Entity {
 
         x = 200; //gameScreen.tileSize * 2;
         y = 150; //gameScreen.tileSize * 10;
-        speed = 5;
+        speed = 300;
         direction = "left";
-        hitbox = new Rectangle(8, 0, 32, 32);
+
+        float[] vertices = {
+            0, 0,   // Bottom left corner
+            0, gameScreen.tileSize,  // Top left corner
+            gameScreen.tileSize * 2, gameScreen.tileSize, // Top right corner
+            gameScreen.tileSize * 2, 0   // Bottom right corner
+        };
+
+        hitbox = new com.badlogic.gdx.math.Polygon(vertices);
+        hitbox.setOrigin(gameScreen.tileSize, gameScreen.tileSize / 2);
+        hitbox.setPosition(x, y);
     }
 
     public void getPlayerImage() {
@@ -73,6 +82,11 @@ public class Player extends Entity {
 
     }
 
+    private void updateHitbox() {
+        hitbox.setPosition(x, y);
+        hitbox.setRotation(-rotation);
+    }
+
     public void update(float delta) {
 
         if (!keyHandler.upPressed && !keyHandler.downPressed && !keyHandler.leftPressed && !keyHandler.rightPressed) {
@@ -97,27 +111,54 @@ public class Player extends Entity {
             rotation -= 360;
         }
 
-        // Check for collisions
-        collision = false;
-        gameScreen.collisionChecker.checkTile(this);
-
-        if (collision) {
-            gameScreen.soundManager.playCrash();
-            return;
-        }
+        /// CHECK FOR COLLISIONS ///
+        int xVelocity = 0;
+        int yVelocity = 0;
+        boolean xCollision = false;
+        boolean yCollision = false;
 
         // Convert rotation to radians for movement calculation
-        float radians = (float) Math.toRadians(rotation);
+        final float radians = (float) Math.toRadians(rotation);
 
-        // Move forward or backward based on rotation
+        // Adjust velocity based on rotation and forward or backward pressed
         if (keyHandler.upPressed) {
-            x += Math.cos(radians) * speed;
-            y -= Math.sin(radians) * speed;
+            xVelocity += Math.cos(radians) * speed * delta;
+            yVelocity -= Math.sin(radians) * speed * delta;
         }
+
         if (keyHandler.downPressed) {
-            x -= Math.cos(radians) * speed;
-            y += Math.sin(radians) * speed;
+            xVelocity -= Math.cos(radians) * speed * delta;
+            yVelocity += Math.sin(radians) * speed * delta;
         }
+
+        // For each vertex of the hitbox we check for collisions
+        for (int i = 0; i < hitbox.getVertexCount(); i++) {
+            Vector2 vertex = new Vector2();
+            hitbox.getVertex(i, vertex);
+
+            int futureX = x + xVelocity;
+            int futureY = y + yVelocity;
+
+            xCollision = gameScreen.collisionChecker.checkTile(futureX, y);
+            yCollision = gameScreen.collisionChecker.checkTile(x, futureY);
+        }
+
+        /// Move if no collisions ///
+        if (xCollision || yCollision) {
+            gameScreen.soundManager.playCrash();
+        }
+
+        if (!xCollision) {
+            x += xVelocity;
+            hitbox.translate(xVelocity, 0);
+        }
+
+        if (!yCollision) {
+            y += yVelocity;
+            hitbox.translate(0, yVelocity);
+        }
+
+        updateHitbox();
 
         // Update walk timer for animation
         if (isWalking) {
@@ -132,48 +173,14 @@ public class Player extends Entity {
 
     public void draw(SpriteBatch batch) {
 
-        Texture sprite = null;
+        // This isn't doing anything
+        sprite = getWalkingSprite(right1, right2, right3);
 
-        // Normalize rotation to the nearest 45 degrees
-        int normalizedRotation = Math.round(rotation / 45) * 45;
-
-        switch (normalizedRotation) {
-            case 0:
-            case 360:
-                sprite = getWalkingSprite(right1, right2, right3);
-                break;
-            case 45:
-                sprite = getWalkingSprite(frontRight1, frontRight2, frontRight3);
-                break;
-            case 90:
-                sprite = getWalkingSprite(front1, front2, front3);
-                break;
-            case 135:
-                sprite = getWalkingSprite(frontLeft1, frontLeft2, frontLeft3);
-                break;
-            case 180:
-                sprite = getWalkingSprite(left1, left2, left3);
-                break;
-            case 225:
-                sprite = getWalkingSprite(backLeft1, backLeft2, backLeft3);
-                break;
-            case 270:
-                sprite = getWalkingSprite(back1, back2, back3);
-                break;
-            case 315:
-                sprite = getWalkingSprite(backRight1, backRight2, backRight3);
-                break;
-            default:
-                sprite = front1;
-                break;
-        }
-
-        sprite = this.sprite;
-
+        // This is bad, we're loading texture every frame
         Texture texture = new Texture("entities/player/topDown.png");
         TextureRegion region = new TextureRegion(texture, 0, 0, texture.getWidth(), texture.getHeight());
 
-        batch.draw(region, (float) x,  (float) y, gameScreen.tileSize / 2, gameScreen.tileSize / 2,  (float) gameScreen.tileSize * 2,  (float) gameScreen.tileSize, 1f, 1f, rotation * -1);
+        batch.draw(region, (float) x, (float) y, gameScreen.tileSize, gameScreen.tileSize / 2, (float) gameScreen.tileSize * 2, (float) gameScreen.tileSize, 1f, 1f, rotation * -1);
     }
 
     // Helper method to select the correct walking sprite

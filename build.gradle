@@ -10,7 +10,6 @@ buildscript {
   }
   dependencies {
 
-
   }
 }
 
@@ -67,6 +66,11 @@ subprojects {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
     maven { url 'https://jitpack.io' }
+  }
+
+  dependencies {
+    // Box2D physics (Move it here)
+    implementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
   }
 }
 
