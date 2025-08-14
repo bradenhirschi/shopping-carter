@@ -4,7 +4,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 
 public class KeyHandler implements InputProcessor {
-    public boolean upPressed, downPressed, leftPressed, rightPressed;
+    public boolean upPressed, downPressed, leftPressed, rightPressed, spacePressed;
 
     @Override
     public boolean keyDown(int keycode) {
@@ -20,6 +20,9 @@ public class KeyHandler implements InputProcessor {
                 break;
             case Input.Keys.D:
                 rightPressed = true;
+                break;
+            case Input.Keys.SPACE:
+                spacePressed = true;
                 break;
         }
         return true;
@@ -39,6 +42,9 @@ public class KeyHandler implements InputProcessor {
                 break;
             case Input.Keys.D:
                 rightPressed = false;
+                break;
+            case Input.Keys.SPACE:
+                spacePressed = false;
                 break;
         }
         return true;

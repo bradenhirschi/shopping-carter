@@ -6,4 +6,12 @@ public class Tile {
 
     public Texture image;
     public boolean collision = false;
+
+    public Tile() {
+
+    }
+
+    public Tile(Boolean collision) {
+        this.collision = collision;
+    }
 }

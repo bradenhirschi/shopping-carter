@@ -15,12 +15,12 @@ public class GameMain extends Game {
     @Override
     public void create() {
         camera = new OrthographicCamera();
-        viewport = new FitViewport(768, 576, camera);
+        viewport = new FitViewport(24, 16, camera);
         viewport.apply();
         setScreen(new GameScreen(camera, viewport));
 
         // Center the camera in the world
-        camera.position.set(256 / 2f, 192 / 2f, 0);
+        camera.position.set(12, 8, 0);
         camera.update();
     }
 

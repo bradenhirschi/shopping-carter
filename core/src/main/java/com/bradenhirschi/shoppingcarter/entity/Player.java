@@ -3,198 +3,112 @@ package com.bradenhirschi.shoppingcarter.entity;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.VertexArray;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.*;
 import com.bradenhirschi.shoppingcarter.GameScreen;
 import com.bradenhirschi.shoppingcarter.KeyHandler;
 
-public class Player extends Entity {
+public class Player {
 
     GameScreen gameScreen;
     KeyHandler keyHandler;
+    public Body body;
+    private Texture texture;
 
-    private float walkTimer = 0f;
-    private int currentFrame = 0;
-    private final float WALK_SPEED = 0.07f; // Time between frames
-    private boolean isWalking = false;
+    // Physics tuning
+    private final float MAX_SPEED = 10f;
+    private final float ACCELERATION = 12f;      // Lower acceleration to emphasize gradual movement
+    private final float TURN_SPEED = 2.5f;       // Reduce turn speed to make it feel like a loose, unstable cart
+    private final float LINEAR_DAMPING = 1.5f;     // Slightly higher to prevent infinite sliding but still allows drift
+    private final float ANGULAR_DAMPING = 6.5f;  // Higher angular damping to reduce spinouts and keep handling predictable
 
     public Player(GameScreen gameScreen, KeyHandler keyHandler) {
-
         this.gameScreen = gameScreen;
         this.keyHandler = keyHandler;
-        setDefaultValues();
-        getPlayerImage();
-    }
 
-    public void setDefaultValues() {
+        // Set up body for Box2d physics
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.type = BodyDef.BodyType.DynamicBody;
+        bodyDef.position.set(1, 1);
+        body = gameScreen.world.createBody(bodyDef);
+        body.setUserData(this);
+        body.setLinearDamping(LINEAR_DAMPING);
+        body.setAngularDamping(ANGULAR_DAMPING);
 
-        x = 200; //gameScreen.tileSize * 2;
-        y = 150; //gameScreen.tileSize * 10;
-        speed = 300;
-        direction = "left";
+        // Create polygon hitbox and attach it to body as a fixture
+        PolygonShape polygon = new PolygonShape();
+        float[] vertices = {0, 0, 0, 0.8f, 1.8f, 0.8f, 1.8f, 0};
+        polygon.set(vertices);
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = polygon;
+        fixtureDef.density = 1f;
+        fixtureDef.friction = 0.8f;
+        fixtureDef.restitution = 0.1f;
+        body.createFixture(fixtureDef);
+        polygon.dispose();
 
-        float[] vertices = {
-            0, 0,   // Bottom left corner
-            0, gameScreen.tileSize,  // Top left corner
-            gameScreen.tileSize * 2, gameScreen.tileSize, // Top right corner
-            gameScreen.tileSize * 2, 0   // Bottom right corner
-        };
-
-        hitbox = new com.badlogic.gdx.math.Polygon(vertices);
-        hitbox.setOrigin(gameScreen.tileSize, gameScreen.tileSize / 2);
-        hitbox.setPosition(x, y);
-    }
-
-    public void getPlayerImage() {
-        sprite = new Texture("entities/player/topDown.png");
-
-        front1 = new Texture("entities/player/front1.png");
-        front2 = new Texture("entities/player/front2.png");
-        front3 = new Texture("entities/player/front3.png");
-
-        frontLeft1 = new Texture("entities/player/frontLeft1.png");
-        frontLeft2 = new Texture("entities/player/frontLeft2.png");
-        frontLeft3 = new Texture("entities/player/frontLeft3.png");
-
-        left1 = new Texture("entities/player/left1.png");
-        left2 = new Texture("entities/player/left2.png");
-        left3 = new Texture("entities/player/left3.png");
-
-        backLeft1 = new Texture("entities/player/backLeft1.png");
-        backLeft2 = new Texture("entities/player/backLeft2.png");
-        backLeft3 = new Texture("entities/player/backLeft3.png");
-
-        back1 = new Texture("entities/player/back1.png");
-        back2 = new Texture("entities/player/back2.png");
-        back3 = new Texture("entities/player/back3.png");
-
-        backRight1 = new Texture("entities/player/backRight1.png");
-        backRight2 = new Texture("entities/player/backRight2.png");
-        backRight3 = new Texture("entities/player/backRight3.png");
-
-        right1 = new Texture("entities/player/right1.png");
-        right2 = new Texture("entities/player/right2.png");
-        right3 = new Texture("entities/player/right3.png");
-
-        frontRight1 = new Texture("entities/player/frontRight1.png");
-        frontRight2 = new Texture("entities/player/frontRight2.png");
-        frontRight3 = new Texture("entities/player/frontRight3.png");
-
-    }
-
-    private void updateHitbox() {
-        hitbox.setPosition(x, y);
-        hitbox.setRotation(-rotation);
+        // Set texture
+        texture = new Texture("entities/player/topDown.png");
     }
 
     public void update(float delta) {
+        boolean drifting = keyHandler.spacePressed;
 
         if (!keyHandler.upPressed && !keyHandler.downPressed && !keyHandler.leftPressed && !keyHandler.rightPressed) {
-            isWalking = false;
             return;
-        } else {
-            isWalking = true;
         }
 
-        // Rotate left or right
-        if (keyHandler.leftPressed) {
-            rotation -= rotationSpeed; // Turn left
-        }
-        if (keyHandler.rightPressed) {
-            rotation += rotationSpeed; // Turn right
-        }
+        float angle = body.getAngle();
+        Vector2 forward = new Vector2((float) Math.cos(angle), (float) Math.sin(angle));
 
-        // Wrap rotation within 0-360 degrees
-        if (rotation < 0) {
-            rotation += 360;
-        } else if (rotation >= 360) {
-            rotation -= 360;
-        }
+        float currentAcceleration = drifting ? ACCELERATION * 0.6f : ACCELERATION;
+        float currentTurnSpeed = drifting ? TURN_SPEED * 1.8f : TURN_SPEED;
+        float currentDamping = drifting ? 1f : LINEAR_DAMPING; // Reduce damping for slide effect
 
-        /// CHECK FOR COLLISIONS ///
-        int xVelocity = 0;
-        int yVelocity = 0;
-        boolean xCollision = false;
-        boolean yCollision = false;
-
-        // Convert rotation to radians for movement calculation
-        final float radians = (float) Math.toRadians(rotation);
-
-        // Adjust velocity based on rotation and forward or backward pressed
         if (keyHandler.upPressed) {
-            xVelocity += Math.cos(radians) * speed * delta;
-            yVelocity -= Math.sin(radians) * speed * delta;
+            Vector2 force = forward.scl(currentAcceleration * delta);
+            body.applyLinearImpulse(force, body.getWorldCenter(), true);
         }
 
         if (keyHandler.downPressed) {
-            xVelocity -= Math.cos(radians) * speed * delta;
-            yVelocity += Math.sin(radians) * speed * delta;
+            Vector2 force = forward.scl(-currentAcceleration * delta);
+            body.applyLinearImpulse(force, body.getWorldCenter(), true);
         }
 
-        // For each vertex of the hitbox we check for collisions
-        for (int i = 0; i < hitbox.getVertexCount(); i++) {
-            Vector2 vertex = new Vector2();
-            hitbox.getVertex(i, vertex);
-
-            int futureX = x + xVelocity;
-            int futureY = y + yVelocity;
-
-            xCollision = gameScreen.collisionChecker.checkTile(futureX, y);
-            yCollision = gameScreen.collisionChecker.checkTile(x, futureY);
+        if (keyHandler.leftPressed) {
+            body.applyAngularImpulse(currentTurnSpeed * delta, true);
         }
 
-        /// Move if no collisions ///
-        if (xCollision || yCollision) {
-            gameScreen.soundManager.playCrash();
+        if (keyHandler.rightPressed) {
+            body.applyAngularImpulse(-currentTurnSpeed * delta, true);
         }
 
-        if (!xCollision) {
-            x += xVelocity;
-            hitbox.translate(xVelocity, 0);
+        // Adjust friction dynamically
+        for (Fixture fixture : body.getFixtureList()) {
+            fixture.setFriction(drifting ? 0.1f : 0.8f);
         }
 
-        if (!yCollision) {
-            y += yVelocity;
-            hitbox.translate(0, yVelocity);
-        }
+        // Reduce damping for drifting effect
+        body.setLinearDamping(currentDamping);
 
-        updateHitbox();
-
-        // Update walk timer for animation
-        if (isWalking) {
-            walkTimer += delta;
-            if (walkTimer >= WALK_SPEED) {
-                walkTimer = 0;
-                currentFrame = (currentFrame + 1) % 3; // Cycle through 3 frames
-            }
+        // Limit speed
+        if (body.getLinearVelocity().len() > MAX_SPEED) {
+            body.setLinearVelocity(body.getLinearVelocity().nor().scl(MAX_SPEED));
         }
     }
 
 
     public void draw(SpriteBatch batch) {
-
-        // This isn't doing anything
-        sprite = getWalkingSprite(right1, right2, right3);
-
-        // This is bad, we're loading texture every frame
-        Texture texture = new Texture("entities/player/topDown.png");
         TextureRegion region = new TextureRegion(texture, 0, 0, texture.getWidth(), texture.getHeight());
 
-        batch.draw(region, (float) x, (float) y, gameScreen.tileSize, gameScreen.tileSize / 2, (float) gameScreen.tileSize * 2, (float) gameScreen.tileSize, 1f, 1f, rotation * -1);
-    }
+        float width = 2f;
+        float height = 1f;
 
-    // Helper method to select the correct walking sprite
-    private Texture getWalkingSprite(Texture sprite1, Texture sprite2, Texture sprite3) {
-        switch (currentFrame) {
-            case 0:
-                return sprite1;
-            case 1:
-                return sprite2;
-            case 2:
-                return sprite3;
-            default:
-                return sprite1;
-        }
-    }
-
+        batch.draw(region,
+            body.getPosition().x, body.getPosition().y,  // Position (centered)
+            0, 0,  // Origin (center for rotation)
+            width, height,  // Size
+            1f, 1f,  // Scale
+            (float) Math.toDegrees(body.getAngle())  // Rotation
+        );    }
 }
